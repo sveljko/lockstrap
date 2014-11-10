@@ -225,8 +225,18 @@ of data):
 
 or restore to something like:
 
-	DECL_LOCKSTRAP_CLASS(User)
+	DECL_LOCKSTRAP_CLASS(User, std::mutex)
 	DECL_LOCKSTRAP_MEMBER(int, a);
 	DECL_LOCKSTRAP_MEMBER(float, b);
-	END_LOCKSTRAP_CLASS(User)
+	END_LOCKSTRAP_CLASS()
 
+Herb Sutter has a C++03 design which is similar to this in an article
+on DrDobbs Journal. Last know URL:
+
+http://www.drdobbs.com/windows/associate-mutexes-with-data-to-prevent-r/224701827
+
+Except the rather ugly macro syntax, his design actually exposes
+lock() and unlock(), which makes it error prone. He does check with an
+assert, but, I believe that lockstrap design is better, as asserts
+aren't there in release configuration, and mutlithreading bugs are
+notorious for manifesting only in the field.
