@@ -174,9 +174,8 @@ work, to an extent) or member functions - which will give strange
 compiler errors - well, you know that member functions can't be
 protected by a mutex, right?
 
-
-Discussion
-----------
+Implementation
+--------------
 
 Implementation is nothing special:
 
@@ -196,7 +195,10 @@ Implementation is nothing special:
   accept a templatized callable parameter and create a "locker"
   object which it will pass to that parameter
 
-Why can't this be done with templates?
+Discussion
+----------
+
+### Why can't this be done with templates?
 
 Well, you may do something like a "smart pointer" if you make the data
 "public" in the "real" class, but that defies the purpose, as the data
@@ -204,13 +206,15 @@ is now public an anyone can use it without the lock.
 
 If you keep the data private, then you may use something like a tuple,
 but that doesn't generate the symbol names, so you would use different
-(and rather ugly) syntax. There are other tricks to be done here, but
-all with the same "tuple" problem.
+(and rather ugly) syntax to access the data. There are other tricks to
+be done here, but all with the same "tuple" problem.
 
 C++11 makes the implementation and usage a lot easier, with variable
 arguments macros and decltype. Actually, with C++14, you can use
 'auto' instead of 'decltype(ME::x)' when declaring the "forwarding
 functions" in the "simple" implementation.
+
+### C++03
 
 One could do similar stuff in C++03, but would have to re-declare the
 types of all data (and call the macro "version" with the right number
@@ -223,7 +227,7 @@ of data):
 		LCKSTRAPSIMP3(Data, std::mutex, int, a, float, b, std::string, c);
 	} d;
 
-or restore to something like:
+or go with something like:
 
 	DECL_LOCKSTRAP_CLASS(User, std::mutex)
 	DECL_LOCKSTRAP_MEMBER(int, a);
@@ -231,12 +235,31 @@ or restore to something like:
 	END_LOCKSTRAP_CLASS()
 
 Herb Sutter has a C++03 design which is similar to this in an article
-on DrDobbs Journal. Last know URL:
+on DrDobbs Journal. Last known URL:
 
 http://www.drdobbs.com/windows/associate-mutexes-with-data-to-prevent-r/224701827
 
 Except the rather ugly macro syntax, his design actually exposes
-lock() and unlock(), which makes it error prone. He does check with an
-assert, but, I believe that lockstrap design is better, as asserts
+lock() and unlock(), which makes it error prone (you may access the
+data without locking). He does check (that lock is locked/held) with
+an assert, but, I believe that lockstrap design is better, as asserts
 aren't there in release configuration, and mutlithreading bugs are
-notorious for manifesting only in the field.
+notorious for manifesting (only) in the field (and you ship release
+configuration to the field). Also, even in the debug build, this
+assert is not enough. That is, you may assert that lock is locked,
+but, by the time you access the data, lock might get unlocked (from
+another thread, of course).
+
+### Is parameter of the with() to be passed by value or rvalue?
+
+Well, it is passed as a rvalue by design. Whether you declare it
+as value parameter, like:
+
+		d.with([](User::locker l) {
+
+or rvalue parameter, like:
+
+		d.with([](User::locker &&l) {
+
+does not matter much. In theory it might, but in practice, especially
+if optimization is turned on, this produces the same code.

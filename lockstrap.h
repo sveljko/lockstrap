@@ -14,7 +14,7 @@
    elements (thus steps) present here , just do some copy pasting and
    add more steps...
  */
-#define LCKSTRPDCL1(ME, x) decltype(ME::x) &x;
+#define LCKSTRPDCL1(ME, x) decltype(ME::x) &x
 #define LCKSTRPDCL2(ME, x, ...) decltype(ME::x) &x; LCKSTRPDCL1(ME, __VA_ARGS__)
 #define LCKSTRPDCL3(ME, x, ...) decltype(ME::x) &x; LCKSTRPDCL2(ME, __VA_ARGS__)
 #define LCKSTRPDCL4(ME, x, ...) decltype(ME::x) &x; LCKSTRPDCL3(ME, __VA_ARGS__)
@@ -25,7 +25,7 @@
 #define LCKSTRPDCL9(ME, x, ...) decltype(ME::x) &x; LCKSTRPDCL8(ME, __VA_ARGS__)
 
 /* Ditto... */
-#define LCKSTRPINIT1(ME, x) , x(me.x)
+#define LCKSTRPINIT1(ME, x), x(me.x)
 #define LCKSTRPINIT2(ME, x, ...), x(me.x) LCKSTRPINIT1(ME, __VA_ARGS__)
 #define LCKSTRPINIT3(ME, x, ...), x(me.x) LCKSTRPINIT2(ME, __VA_ARGS__)
 #define LCKSTRPINIT4(ME, x, ...), x(me.x) LCKSTRPINIT3(ME, __VA_ARGS__)
@@ -56,29 +56,29 @@
 
     MyClass x;
     auto xl = x.access();
-    xl.my_int() = 5;
-    std::cout << xl.my_int() << std::endl;
-    x.with([](MyClass::locker l) { l.my_int() = 6 });
+    xl.my_int = 5;
+    std::cout << xl.my_int << std::endl;
+    x.with([](MyClass::locker l) { l.my_int = 6 });
+    // or, in C++14:
+    x.with([](auto l) { l.my_int = 6 });
 
     Remember to keep the GET_MACRO "calls" up-to-date with the maximum
     number of steps supported.
 
     @param ME The name of the class we are adding a "lock strap" to
     @param LOCK The type of the lock (implements the "Lockable"
-    concept - that is, has a "lock()" and "unlock()" member
-    functions.)
+    concept - i.e., has a "lock()" and "unlock()" member functions.)
  */
 #define LOCKSTRAP(ME, LOCK, ...)					\
   private: LOCK d_locker;						\
 public: class locker {							\
-  ME &d_me;								\
+    ME &d_me;								\
 public:									\
- GET_MACRO(__VA_ARGS__, LCKSTRPDCL9,LCKSTRPDCL8,LCKSTRPDCL7,LCKSTRPDCL6,LCKSTRPDCL5,LCKSTRPDCL4,LCKSTRPDCL3,LCKSTRPDCL2,LCKSTRPDCL1)(ME, __VA_ARGS__) \
- locker(ME &me) : d_me(me)						\
-  GET_MACRO(__VA_ARGS__, LCKSTRPINIT9,LCKSTRPINIT8,LCKSTRPINIT7,LCKSTRPINIT6,LCKSTRPINIT5,LCKSTRPINIT4,LCKSTRPINIT3,LCKSTRPINIT2,LCKSTRPINIT1)(ME, __VA_ARGS__) \
- { me.d_locker.lock(); }						\
-  ~locker() { d_me.d_locker.unlock(); }					\
-  };									\
+ GET_MACRO(__VA_ARGS__, LCKSTRPDCL9,LCKSTRPDCL8,LCKSTRPDCL7,LCKSTRPDCL6,LCKSTRPDCL5,LCKSTRPDCL4,LCKSTRPDCL3,LCKSTRPDCL2,LCKSTRPDCL1)(ME, __VA_ARGS__); \
+ locker(ME &me) : d_me(me) GET_MACRO(__VA_ARGS__, LCKSTRPINIT9,LCKSTRPINIT8,LCKSTRPINIT7,LCKSTRPINIT6,LCKSTRPINIT5,LCKSTRPINIT4,LCKSTRPINIT3,LCKSTRPINIT2,LCKSTRPINIT1)(ME, __VA_ARGS__) \
+  { me.d_locker.lock(); }						\
+ ~locker() { d_me.d_locker.unlock(); }					\
+};									\
   locker access() { return locker(*this); }				\
   template <typename F> void with(F f) { f(locker(*this)); }
 

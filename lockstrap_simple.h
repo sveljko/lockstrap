@@ -47,23 +47,24 @@
     xl.my_int() = 5;
     std::cout << xl.my_int() << std::endl;
     x.with([](MyClass::locker l) { l.my_int() = 6 });
+    // or, in C++14:
+    x.with([](auto l) { l.my_int() = 6 });
 
     Remember to keep the GET_MACRO "call" up-to-date with the maximum
     number of steps supported.
 
     @param ME The name of the class we are adding a "lock strap" to
     @param LOCK The type of the lock (implements the "Lockable"
-    concept - that is, has a "lock()" and "unlock()" member
-    functions.)
+    concept - i.e., has a "lock()" and "unlock()" member functions.)
  */
 #define LCKSTRAPSIMP(ME, LOCK, ...)					\
   private: LOCK d_locker;						\
 public: class locker {							\
-  ME &d_me;								\
-  public:locker(ME &me): d_me(me) {me.d_locker.lock();}			\
-  ~locker() {d_me.d_locker.unlock();}					\
-  GET_MACRO(__VA_ARGS__, LCKSTRAPSIMP9,LCKSTRAPSIMP8,LCKSTRAPSIMP7,LCKSTRAPSIMP6,LCKSTRAPSIMP5,LCKSTRAPSIMP4,LCKSTRAPSIMP3,LCKSTRAPSIMP2,LCKSTRAPSIMP1)(ME, __VA_ARGS__) \
-    };									\
+    ME &d_me;								\
+public: locker(ME &me) : d_me(me) { me.d_locker.lock(); }		\
+    ~locker() { d_me.d_locker.unlock(); }				\
+    GET_MACRO(__VA_ARGS__, LCKSTRAPSIMP9,LCKSTRAPSIMP8,LCKSTRAPSIMP7,LCKSTRAPSIMP6,LCKSTRAPSIMP5,LCKSTRAPSIMP4,LCKSTRAPSIMP3,LCKSTRAPSIMP2,LCKSTRAPSIMP1)(ME, __VA_ARGS__) \
+};									\
   locker access() { return locker(*this); }				\
   template <typename F> void with(F f) { f(locker(*this)); }
 

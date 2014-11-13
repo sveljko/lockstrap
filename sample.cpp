@@ -32,7 +32,7 @@ void TestSimple()
   al.x().emplace_back(3L);
 
   // With C++14 compiler, you can replace 'Simple::locker' with 'auto'
-  simp.with([](Simple::locker l) {
+  simp.with([](Simple::locker &&l) {
       // Within the "with block" the locker holds the lock, so it will be
       // unlocked at the end of this lambda.
       std::cout << l.a() << " " << l.b() << " " << l.c() << " " << l.x().size() << std::endl;
@@ -44,6 +44,7 @@ void TestSimple()
   std::cout << al.a() << " " << al.b() << " " << al.c() << " " << al.x().size() << std::endl;
 }
 
+
 #include "lockstrap.h"
 
 class User {
@@ -53,6 +54,7 @@ class User {
   std::vector<long> x;
   LOCKSTRAP(User, std::mutex, a,b,c,x);
 };
+
 
 void TestRegular()
 {
@@ -72,7 +74,7 @@ void TestRegular()
   al.x.emplace_back(3L);
 
   // With C++14 compiler, you can replace 'User::locker' with 'auto'
-  usr.with([](User::locker l) {
+  usr.with([](User::locker &&l) {
       std::cout << l.a << " " << l.b << " " << l.c << " " << l.x.size() << std::endl;
       l.a = 4;
       l.b = 4.2;
