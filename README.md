@@ -34,8 +34,8 @@ shouldn't be and vice versa.
 
 Well, these "lock-strap" macros provide a way to fix that.  I know, I
 wish they were not macros, but I'm pretty certain that with
-C++11/C++14 there is no way to avoid macros (and keep a nice syntax
-for users).
+C++11 through C++23 there is no way to avoid macros _and_ keep a nice syntax
+for the users.
 
 
 Usage
@@ -72,7 +72,7 @@ This is how you would use them in some User member function(s):
 		// whatever.
 		al.a = 3;
 		al.b = al.a / 2;
-		// mutex will be unloced when 'al' goes out of scope here
+		// mutex will be unlocked when 'al' goes out of scope here
 	}
 
 	void User::g()
@@ -83,10 +83,9 @@ This is how you would use them in some User member function(s):
 			// whatever.
 			l.a = 33;
 			l.c.append(std::to_string(l.b));
-			// mutex will be unloced when 'l' goes out of scope here
-			});
-		// Of course, 'with' can accept any callable object,
-		// even a function pointer.
+			// mutex will be unlocked when 'l' goes out of scope here
+		});
+		// with() accepts any callable object, even a function pointer.
 	}
 
 You can combine both 'access' and 'with' in the same function, but
@@ -147,7 +146,7 @@ member.  In all tests, especially with optimizations on, the generated
 code is actually the same, as everything is inlined.
 
 Also, for most compilers, simple will give somewhat nicer errors on
-bad usage.
+incorrect usage.
 
 
 Remarks
@@ -262,4 +261,5 @@ or rvalue parameter, like:
 		d.with([](User::locker &&l) {
 
 does not matter much. In theory it might, but in practice, especially
-if optimization is turned on, this produces the same code.
+if optimizations are turned on, this produces the same machine/binary
+code.
