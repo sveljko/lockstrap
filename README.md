@@ -1,7 +1,7 @@
 lockstrap
 =========
 
-(Опис на српском)[README.sr.md]
+[README.sr.md](Опис на српском)
 
 A few macros to keep data and it's lock together, for C++11 and
 later.
